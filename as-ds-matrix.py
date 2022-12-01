@@ -37,12 +37,12 @@ def main():
         demand_shock = 0
 
         if t < 5:
-            supply_shock = 1
-            demand_shock = 0
-
-        elif t > 5 and t < 12:
             supply_shock = 0
-            demand_shock = 0
+            demand_shock = 2
+
+        elif t >= 5 and t < 12:
+            supply_shock = 0
+            demand_shock = 2
 
         return np.array([supply_shock, demand_shock])
 
