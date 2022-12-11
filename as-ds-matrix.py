@@ -17,6 +17,9 @@ def main():
     # output gap to (deviation in target) interest rate sensitivity (b bar)
     b = 1
 
+    # Monetary policy aggressiveness
+    m = 3
+
     # target inflation percentage
     inflation_target = 2 
 
@@ -40,23 +43,24 @@ def main():
             supply_shock = 0
             demand_shock = 2
 
-        elif t >= 5 and t < 12:
-            supply_shock = 0
-            demand_shock = 2
+        # elif t >= 5 and t < 12:
+        #     supply_shock = 1
+        #     demand_shock = 0
 
         return np.array([supply_shock, demand_shock])
 
-    model = Model(inflation_target, output_gap_target, v, b, n_time_steps, shocks1)
+    model = Model(inflation_target, output_gap_target, v, b,m, n_time_steps, shocks1)
     model.run()
 
 
 class Model:
     # By default: inflation_0 = inflation_target , output_gap_0 = output_gap_target
-    def __init__(self,inflation_target, output_gap_target, v, b, n_time_steps, shocks_func):
+    def __init__(self,inflation_target, output_gap_target, v, b,m,  n_time_steps, shocks_func):
         self.inflation_target = inflation_target
         self.output_gap_target = output_gap_target
         self.v = v
         self.b = b
+        self.m = m
         self.n_time_steps = n_time_steps
         self.shocks_func = shocks_func
 
@@ -67,7 +71,7 @@ class Model:
         x_0 = np.array([self.inflation_target, self.output_gap_target])
 
         # Transition matrix
-        B = np.array([[0, self.v],[-self.b, 0]])
+        B = np.array([[0, self.v],[-self.b*self.m, 0]])
     
         #### GENERAL MODEL - x_{t+1} as a function of x_{t} and shocks ####
 
@@ -75,7 +79,7 @@ class Model:
             I2 = np.identity(2)
             C = np.linalg.inv(I2 - B) 
             
-            return (C @ np.array([[1,0],[0,0]]) @ x_t) + (C @ (shocks + np.array([0, self.b*self.inflation_target])))
+            return (C @ np.array([[1,0],[0,0]]) @ x_t) + (C @ (shocks + np.array([0, self.b*self.m*self.inflation_target])))
 
 
         #### RUNNING and ANIMATING MODEL ####
@@ -123,7 +127,7 @@ class Model:
 
 
         plt.xlabel("Output Gap " +  r'$(\tilde{Y})$')
-        plt.ylabel("Inflation\n" + r'$(\pi_{t})$', rotation=0)
+        plt.ylabel("Inflation (%)\n" + r'$(\pi_{t})$', rotation=0)
 
         graph = plt.scatter([], [])
         plt.title("AS-DS Model over time with some shock")
