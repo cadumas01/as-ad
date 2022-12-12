@@ -1,5 +1,6 @@
 ''' 
 Practice putting as-ds model into dynamical system (matrix represenation).
+Author: Cole Dumas
 See goodnotes "Econ Matrix Practice" for full details
 '''
 
@@ -12,13 +13,13 @@ def main():
     ##### DEFINING CONSTANTS #####
 
     # inflation sensitivity to demand conditions (v bar)
-    v = 1
+    v = 0.5
 
     # output gap to (deviation in target) interest rate sensitivity (b bar)
-    b = 1
+    b = .5
 
     # Monetary policy aggressiveness
-    m = 3
+    m = .5
 
     # target inflation percentage
     inflation_target = 2 
@@ -27,11 +28,9 @@ def main():
     output_gap_target = 0 
 
     # how many steps in the model runthrough
-    n_time_steps = 25
+    n_time_steps = 11
 
 
-    ### DEFINING SHOCKS - Can change over time ###
-    # some function describing supply and demand shocks over time returns a vector of shocks  
     def shocks1(t):
         # o bar (default)
         supply_shock = 0
@@ -39,17 +38,48 @@ def main():
         # a bar (default)
         demand_shock = 0
 
-        if t < 5:
-            supply_shock = 0
-            demand_shock = 2
-
-        # elif t >= 5 and t < 12:
-        #     supply_shock = 1
-        #     demand_shock = 0
+        # supply shock 
+        if t >= 1 and t <= 4:
+            supply_shock = 1
+            demand_shock = 0
 
         return np.array([supply_shock, demand_shock])
 
-    model = Model(inflation_target, output_gap_target, v, b,m, n_time_steps, shocks1)
+
+    ### DEFINING SHOCKS - Can change over time ###
+    # Shocks for Final exam Question 4.3
+    def shocks3(t):
+        # o bar (default)
+        supply_shock = 0
+
+        # a bar (default)
+        demand_shock = 0
+
+        # supply shock 
+        if t == 1:
+            supply_shock = 2
+            demand_shock = 0
+
+        return np.array([supply_shock, demand_shock])
+
+
+    def shocks4(t):
+        # o bar (default)
+        supply_shock = 0
+
+        # a bar (default)
+        demand_shock = 0
+
+        # demand shock multiple periods
+        if t >= 1 and t <= 4:
+            supply_shock = 0
+            demand_shock = -2
+
+        return np.array([supply_shock, demand_shock])
+
+
+
+    model = Model(inflation_target, output_gap_target, v, b,m, n_time_steps, shocks4)
     model.run()
 
 
@@ -69,6 +99,7 @@ class Model:
     def run(self):
         # let each state vector, x_t = [inflation; output_gap_t]. This is inital state
         x_0 = np.array([self.inflation_target, self.output_gap_target])
+
 
         # Transition matrix
         B = np.array([[0, self.v],[-self.b*self.m, 0]])
@@ -92,11 +123,14 @@ class Model:
         x_t_series = np.reshape(x_t, (2,1))
         print(x_t_series)
 
-        for t in range(self.n_time_steps):
-            print(f"At time t = {t}:\n\tinflation = {x_t[0]}\n\toutput gap = {x_t[1]}\n")
+        print(f"At time t = {0}:\n\tinflation = {x_t[0]}\n\toutput gap = {x_t[1]}\n")
+        # start at 1 (we already calcualted at t=0)
+        for t in range(1, self.n_time_steps):
 
             # set x_t <- x_t_next
             x_t = get_x_t_next(x_t, self.shocks_func(t))
+            print(f"At time t = {t}:\n\tinflation = {x_t[0]}\n\toutput gap = {x_t[1]}\n") # figure out printing indices
+
 
             # append to storage matrix
             x_t_series = np.concatenate((x_t_series, np.reshape(x_t, (2,1))), axis=1)
@@ -140,7 +174,7 @@ class Model:
             time_label.set_text(f"time, t = {min(t, self.n_time_steps-1)}")
             return graph
 
-        ani = FuncAnimation(fig, animate, repeat=False, interval=300)
+        ani = FuncAnimation(fig, animate, repeat=False, interval=400)
     
         plt.show()
 
@@ -149,7 +183,3 @@ class Model:
 if __name__ == "__main__":
     main()
    
-
-   
-
-    
